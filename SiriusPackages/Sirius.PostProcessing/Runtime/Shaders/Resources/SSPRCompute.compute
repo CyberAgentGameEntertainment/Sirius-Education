@@ -1,0 +1,261 @@
+// Based on UnityURP-MobileScreenSpacePlanarReflection
+// https://github.com/ColinLeung-NiloCat/UnityURP-MobileScreenSpacePlanarReflection
+// Copyright (c) 2020 ColinLeung-NiloCat
+// Licensed under the MIT License. See THIRD_PARTY_NOTICES.md in the repository root for the full license text.
+
+#define NUMTHREAD_X 8
+#define NUMTHREAD_Y 8
+
+#include "Packages/jp.co.cyberagent.sirius.core/Runtime/Shaders/Common_URP_Free/SiriusCore.hlsl"
+
+float2 _RTSize;
+float _HorizontalPlaneHeightWS;
+float _HorizontalPlaneHeightWSBias;
+float _FadeOutScreenBorderWidthVertical;
+float _FadeOutScreenBorderWidthHorizontal; // コンピュートシェーダーでは half 型の入力を宣言できないため float を使う
+float3 _CameraDirection;
+float3 _CameraPositionWS;
+//computeはengine設定の内蔵行列に依存できない（MetalでUNITY_MATRIX_VPが不正になるのを実測）ため、VP/InvVPとも自前供給する
+float4x4 _VPMatrix;
+float4x4 _InvVPMatrix;
+float _ScreenLRStretchIntensity;
+float _ScreenLRStretchThreshold;
+float4 _FinalTintColor;
+
+RWTexture2D<float4> ColorRT;
+Texture2D<half4> _CopiedCameraRT;
+Texture2D<float> _CameraDepthTexture;
+// モバイル（Android）パスで使う RT: posWSy を 32bit float 1 チャンネルで保持
+// RWTexture2D<uint> PosWSyRT;
+RWBuffer<uint> PosWSyRT;
+//uint _FrameCount;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// 共通関数
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#define UPWARD_SURFACE_MIN_NORMAL_Y_SQ 0.9
+
+float3 ConvertScreenUVToPosWS(float2 screenUV)
+{
+    // Depthのサンプリング
+    float inputPixelRawDepth = _CameraDepthTexture.SampleLevel(sampler_PointClamp, screenUV, 0).r;
+
+    // Depthからのワールド座標の復元
+    // https://zenn.dev/r_ngtm/articles/shadergraph-reconstruct-wpos-depth
+    float4 posCS = float4(screenUV * 2.0 - 1.0, inputPixelRawDepth, 1.0);
+    #if UNITY_UV_STARTS_AT_TOP
+    posCS.y = -posCS.y;
+    #endif
+
+    float4 posHWS = mul(_InvVPMatrix, posCS);
+    return posHWS.xyz / posHWS.w;
+}
+
+// 反射平面より上にある上向きの水平面は鏡像カメラから常に裏面となり、正しい反射には映らない。
+// これを反射元から外さないと、平面高さが受け手の床より下にずれた際に床自身が反射元として書き込まれ、
+// InterlockedMinの競合で(平面に最も近い)床が勝ち続けて本来の反射を上書きしてしまう
+bool IsUpwardHorizontalSurface(float2 screenUV, float3 posWS)
+{
+    float2 texel = 1.0 / _RTSize;
+    float3 dxR = ConvertScreenUVToPosWS(screenUV + float2(texel.x, 0)) - posWS;
+    float3 dxL = posWS - ConvertScreenUVToPosWS(screenUV - float2(texel.x, 0));
+    float3 dyU = ConvertScreenUVToPosWS(screenUV + float2(0, texel.y)) - posWS;
+    float3 dyD = posWS - ConvertScreenUVToPosWS(screenUV - float2(0, texel.y));
+    // 深度の不連続をまたいだ差分で法線が崩れないよう、各軸で変化の小さい側を採る
+    float3 dx = dot(dxR, dxR) < dot(dxL, dxL) ? dxR : dxL;
+    float3 dy = dot(dyU, dyU) < dot(dyD, dyD) ? dyU : dyD;
+    float3 n = cross(dx, dy);
+    // 画面端のクランプで差分が0になった縮退法線(dot(n,n)=0)は水平面と判定しない。
+    // カメラより下にある水平面だけを上向き(床)とみなし、天井は反射元として残す
+    return n.y * n.y > UPWARD_SURFACE_MIN_NORMAL_Y_SQ * dot(n, n) && posWS.y < _CameraPositionWS.y;
+}
+
+float3 MirrorPosWS(float3 inputPosWS, float planeHeight)
+{
+    float3 reflectedPosWS = inputPosWS;
+    reflectedPosWS.y -= planeHeight;
+    reflectedPosWS.y *= -1; // ここで実際に反転させる
+    reflectedPosWS.y += planeHeight;
+
+    return reflectedPosWS;
+}
+
+float2 ConvertReflectedPosWSToScreenUV(float3 reflectedPosWS, float planeHeight)
+{
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 反転後の posWS のスクリーン UV を求める
+    //https://github.com/Steven-Cannavan/URP_ScreenSpacePlanarReflections/blob/master/Assets/Shaders/ReflectionShader.compute#L87
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    float4 reflectedPosCS = mul(_VPMatrix, float4(reflectedPosWS, 1)); // posWS -> posCS
+    float2 reflectedPosNDCxy = reflectedPosCS.xy / reflectedPosCS.w; // posCS -> posNDC
+
+    float2 reflectedScreenUV = reflectedPosNDCxy * 0.5 + 0.5;
+    // posNDC -> スクリーン [0,1] UV。範囲外で早期リターンできるよう saturate() しない
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 左右のジオメトリ欠けを補正する
+    //ref: http://remi-genin.fr/blog/screen-space-plane-indexed-reflection-in-ghost-recon-wildlands/#filling-the-gaps-jump
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // サンプルコードの出典: http://remi-genin.fr/blog/screen-space-plane-indexed-reflection-in-ghost-recon-wildlands/#filling-the-gaps-jump
+    /*
+    float HeightStretch = (PosWS.z - WaterHeight);
+    float AngleStretch = saturate(- CameraDirection.z);
+    float ScreenStretch = saturate(abs(ReflPosUV.x * 2 - 1) - Threshold);
+
+    ReflPosUV.x *= 1 + HeightStretch * AngleStretch * ScreenStretch * Intensity;
+    */
+
+    // TODO: 左右の補填を改善する
+    float Threshold = _ScreenLRStretchThreshold;
+    float Intensity = _ScreenLRStretchIntensity;
+
+    float HeightStretch = (abs(reflectedPosWS.y - planeHeight));
+    float AngleStretch = (-_CameraDirection.y);
+    float ScreenStretch = saturate(abs(reflectedScreenUV.x * 2 - 1) - Threshold);
+
+    reflectedScreenUV.x = reflectedScreenUV.x * 2 - 1;
+    reflectedScreenUV.x *= 1 + HeightStretch * AngleStretch * ScreenStretch * Intensity;
+    reflectedScreenUV.x = saturate(reflectedScreenUV.x * 0.5 + 0.5);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // プラットフォームに応じて UV を反転する
+    //ref: https://github.com/Steven-Cannavan/URP_ScreenSpacePlanarReflections/blob/master/Assets/Shaders/ReflectionShader.compute#L95
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    #if UNITY_UV_STARTS_AT_TOP
+    reflectedScreenUV.y = 1.0 - reflectedScreenUV.y;
+    #endif
+
+    return reflectedScreenUV;
+}
+
+half ConvertOpaqueColorRTScreenUVToFadeAlphaParam(float2 screenUV, float reflectedPosWSy, float planeHeight)
+{
+    // 縦方向 uv.y でフェードアウト（_CameraOpaqueTexture の UV 上端に近づいた場合のみ）
+    half fadeoutAlpha = smoothstep(1, 1 - _FadeOutScreenBorderWidthVertical, screenUV.y);
+    // 横方向 uv.x でフェードアウト
+    // TODO: フェードアウトを改善する
+    fadeoutAlpha *= smoothstep(
+        1, 1 - _FadeOutScreenBorderWidthHorizontal * -(reflectedPosWSy - planeHeight),
+        abs(screenUV.x * 2 - 1));
+    return fadeoutAlpha;
+}
+
+#pragma kernel Clear
+
+[numthreads(NUMTHREAD_X,NUMTHREAD_Y,1)]
+void Clear(uint3 id : SV_DispatchThreadID)
+{
+    ColorRT[uint2(id.xy)] = half4(0, 0, 0, 0);
+    // RGB を黒、アルファを 0 にする。アルファ 0 は有効な SSPR ピクセルがないことを示し、反射面は SSPR の結果を使わない
+    int index = id.y * _RTSize.x + id.x;
+    PosWSyRT[index] = 0xFFFFFFFF; // クリア値として非常に大きな posWS.y を入れる
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// kernel MobilePathSinglePassColorRTDirectResolve
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma kernel MobilePathSinglePassColorRTDirectResolve
+[numthreads(NUMTHREAD_X,NUMTHREAD_Y,1)]
+void MobilePathSinglePassColorRTDirectResolve(uint3 id : SV_DispatchThreadID)
+{
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    //ConvertScreenUVToPosWS
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    float2 screenUV = id.xy / _RTSize;
+    float3 posWS = ConvertScreenUVToPosWS(screenUV);
+    // 反射平面のモデルと同じ高さだと、そのモデル自身が反射してしまうので、少し上に持ち上げる
+    float planeHeightWS = _HorizontalPlaneHeightWS + _HorizontalPlaneHeightWSBias;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // posWS が既に反射面より下（例: 水面下）にある場合、
+    // 反射すべき色にはなり得ないので、Color RT に誤った結果を書き込まないよう早期リターンする
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    UNITY_BRANCH
+    if (posWS.y <= planeHeightWS)
+        return;
+    UNITY_BRANCH
+    if (IsUpwardHorizontalSurface(screenUV, posWS))
+        return;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 水平な反射面（例: 水面）を基準に posWS を反転する
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    float3 reflectedPosWS = MirrorPosWS(posWS, planeHeightWS);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    //ConvertReflectedPosWSToScreenID
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    float2 reflectedScreenUV = ConvertReflectedPosWSToScreenUV(reflectedPosWS, planeHeightWS);
+    // 範囲外アクセスを避けるため、UV が無効なら早期リターンする
+    float2 earlyExitTest = abs(reflectedScreenUV - 0.5);
+    UNITY_BRANCH
+    if (earlyExitTest.x >= 0.5 || earlyExitTest.y >= 0.5)
+        return;
+    uint2 reflectedScreenID = reflectedScreenUV * _RTSize; // スクリーン UV [0,1] から [0,RTSize-1] へ
+
+    // ColorRT への書き込み順は不定なため（同一ディスパッチ内で同じスロットに複数の候補が書き込み得る）、
+    // ここでは「水平な反射面により近い候補」だけが ColorRT と PosWSyRT に書き込めるようにする。
+    // 最終的に「反射面に最も近い候補」だけが ColorRT と PosWSyRT に残り、それが正しい反射データになる
+
+    uint projectionHash = id.y << 16 | id.x;
+    int reflectIndex = reflectedScreenID.y * _RTSize.x + reflectedScreenID.x;
+
+    #if UNITY_PLATFORM_ANDROID
+    // Androidでは一部の端末(pixel 6、pixel 8aで確認)でInterlockedMinがサポートされていないような挙動があった。
+    // Unityのフォーラムにも同様の問題の報告があった。
+    // そのフォーラムではUnityのバグではなくデバイスの問題の可能性が高いという結論だった。
+    // そこで下記のURLのように確実ではないが5回min関数を実行して、それで書き込めていたら書き込めたものとして扱うこととする。
+    // https://discussions.unity.com/t/equivalent-to-interlockmin-in-opengl-vulkan/927172
+    // https://gamedev.stackexchange.com/questions/206967/unity-compute-shader-interlockedmin-max-not-work-on-android
+    UNITY_UNROLL
+    for(int i = 0; i < 5; i++)
+    {
+        PosWSyRT[reflectIndex] = min(PosWSyRT[reflectIndex], projectionHash);
+    }
+    #else
+    InterlockedMin(PosWSyRT[reflectIndex], projectionHash);
+    #endif
+    
+    UNITY_BRANCH
+    if (PosWSyRT[reflectIndex] == projectionHash) // 書き込めたか判定
+    {
+        half3 inputPixelSceneColor = _CopiedCameraRT.SampleLevel(sampler_LinearClamp, screenUV, 0).rgb;
+        half fadeoutAlpha = ConvertOpaqueColorRTScreenUVToFadeAlphaParam(screenUV, reflectedPosWS.y, planeHeightWS);
+        // 以下のデータを 2 つの RT に書き込む:
+        // - ColorRT.rgba = 現時点で最適な反射色とアルファ（アルファは SSPR の使用率）
+        // - PosWSyRT.r = 現時点で最小の posWS.y（通常の深度バッファの ZTest -> ZWrite と同様の考え方）
+        half4 color = half4(inputPixelSceneColor, fadeoutAlpha) * _FinalTintColor;
+        color.a = saturate(color.a);
+        //color.xyz += lerp(-0.1f, 0.1f, InterleavedGradientNoise((float2)id, _FrameCount % 8) );
+        ColorRT[reflectedScreenID] = color;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// kernel FillHoles
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma kernel FillHoles
+
+[numthreads(NUMTHREAD_X, NUMTHREAD_Y, 1)]
+void FillHoles(uint3 id : SV_DispatchThreadID)
+{
+    // 2x2 ブロック内の穴を埋める
+    id.xy *= 2;
+
+    // 読み込みをキャッシュ
+    half4 center = ColorRT[id.xy + uint2(0, 0)];
+    half4 right = ColorRT[id.xy + uint2(0, 1)];
+    half4 bottom = ColorRT[id.xy + uint2(1, 0)];
+    half4 bottomRight = ColorRT[id.xy + uint2(1, 1)];
+
+    // 2x2 内で最適なものを探す
+    half4 best = center;
+    best = right.a > best.a + 0.5 ? right : best;
+    best = bottom.a > best.a + 0.5 ? bottom : best;
+    best = bottomRight.a > best.a + 0.5 ? bottomRight : best;
+
+    // より良い rgba を書き込む
+    ColorRT[id.xy + uint2(0, 0)] = best.a > center.a + 0.5 ? best : center;
+    ColorRT[id.xy + uint2(0, 1)] = best.a > right.a + 0.5 ? best : right;
+    ColorRT[id.xy + uint2(1, 0)] = best.a > bottom.a + 0.5 ? best : bottom;
+    ColorRT[id.xy + uint2(1, 1)] = best.a > bottomRight.a + 0.5 ? best : bottomRight;
+}

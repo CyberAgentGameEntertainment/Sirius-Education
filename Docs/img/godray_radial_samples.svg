@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300"><style>text{font-family:"Yu Gothic UI","Hiragino Sans","Meiryo UI",sans-serif;letter-spacing:-0.02em;fill:#18202c}.mono{font-family:Consolas,"Cascadia Code",monospace}.muted{fill:#5a6577}</style><rect width="640" height="300" fill="#ffffff"/>
+        <rect x="20" y="20" width="600" height="260" rx="6" fill="#f4f6f9" stroke="#d9dee6"/>
+        <circle cx="470" cy="80" r="44" fill="#fbefdc"/>
+        <circle cx="470" cy="80" r="14" fill="#b86a00"/>
+        <text x="470" y="40" text-anchor="middle" font-size="12">太陽の画面位置 (center)</text>
+        <rect x="300" y="120" width="60" height="140" fill="#5a6577" opacity=".35"/>
+        <text x="330" y="276" text-anchor="middle" font-size="11" class="muted">遮蔽物 (mask = 0)</text>
+        <line x1="120" y1="230" x2="470" y2="80" stroke="#b86a00" stroke-width="1" stroke-dasharray="3 4"/>
+        <circle cx="120" cy="230" r="6" fill="#18202c"/>
+        <text x="112" y="256" text-anchor="middle" font-size="12">画素 uv</text>
+        <!-- even frame samples -->
+        <g fill="#b86a00">
+          <circle cx="160" cy="213" r="6" opacity="1"/>
+          <circle cx="224" cy="185" r="5.5" opacity=".85"/>
+          <circle cx="290" cy="157" r="5" opacity=".65"/>
+          <circle cx="354" cy="130" r="4" opacity=".45"/>
+        </g>
+        <g fill="none" stroke="#b86a00" stroke-width="1.6">
+          <circle cx="192" cy="199" r="6" opacity="1"/>
+          <circle cx="258" cy="171" r="5.5" opacity=".85"/>
+          <circle cx="322" cy="143" r="5" opacity=".65"/>
+          <circle cx="388" cy="115" r="4" opacity=".45"/>
+        </g>
+        <g font-size="11.5">
+          <circle cx="44" cy="44" r="5" fill="#b86a00"/><text x="56" y="48">偶数フレームのサンプル</text>
+          <circle cx="44" cy="66" r="5" fill="none" stroke="#b86a00" stroke-width="1.6"/><text x="56" y="70">奇数フレームのサンプル</text>
+          <text x="44" y="92" class="muted">点の濃さ = ガウス重み (σ = 0.35)</text>
+        </g>
+      </svg>

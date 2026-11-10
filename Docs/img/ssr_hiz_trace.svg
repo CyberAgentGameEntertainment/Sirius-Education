@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320" viewBox="0 0 640 320"><style>text{font-family:"Yu Gothic UI","Hiragino Sans","Meiryo UI",sans-serif;letter-spacing:-0.02em;fill:#18202c}.mono{font-family:Consolas,"Cascadia Code",monospace}.muted{fill:#5a6577}</style><rect width="640" height="320" fill="#ffffff"/>
+        <defs><marker id="arrV" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5a49c4"/></marker></defs>
+        <rect x="20" y="20" width="600" height="280" rx="6" fill="#f4f6f9" stroke="#d9dee6"/>
+        <text x="36" y="44" font-size="11" class="muted">手前（深度 0）</text>
+        <text x="36" y="290" font-size="11" class="muted">奥（深度 1）</text>
+        <text x="604" y="44" font-size="11" text-anchor="end" class="muted">← 画面の x →</text>
+        <!-- level0 surface: 8 cells of 64px from x=60 -->
+        <g fill="#5a6577" opacity=".28">
+          <rect x="60" y="250" width="64" height="40"/><rect x="124" y="244" width="64" height="46"/>
+          <rect x="188" y="238" width="64" height="52"/><rect x="252" y="240" width="64" height="50"/>
+          <rect x="316" y="236" width="64" height="54"/><rect x="380" y="232" width="64" height="58"/>
+          <rect x="444" y="150" width="64" height="140"/><rect x="508" y="146" width="64" height="144"/>
+        </g>
+        <!-- level 2 min planes (4 cells -> 2 cells of 256) -->
+        <line x1="60" y1="232" x2="316" y2="232" stroke="#5a49c4" stroke-width="1.2" stroke-dasharray="6 4" opacity=".55"/>
+        <line x1="316" y1="146" x2="572" y2="146" stroke="#5a49c4" stroke-width="1.2" stroke-dasharray="6 4" opacity=".55"/>
+        <text x="188" y="226" text-anchor="middle" font-size="10.5" fill="#5a49c4">レベル 2 の minZ</text>
+        <!-- level1 min planes -->
+        <line x1="316" y1="232" x2="444" y2="232" stroke="#5a49c4" stroke-width="1" opacity=".8"/>
+        <line x1="444" y1="146" x2="572" y2="146" stroke="#5a49c4" stroke-width="1" opacity=".8"/>
+        <!-- ray -->
+        <circle cx="70" cy="70" r="6" fill="#18202c"/>
+        <text x="80" y="66" font-size="12">反射の始点</text>
+        <polyline points="70,70 124,88 316,152 444,195 476,206" fill="none" stroke="#5a49c4" stroke-width="2.2" marker-end="url(#arrV)"/>
+        <g fill="#5a49c4"><circle cx="124" cy="88" r="4"/><circle cx="316" cy="152" r="4"/><circle cx="444" cy="195" r="4"/></g>
+        <text x="132" y="104" font-size="11">L0 で隣のセルへ</text>
+        <text x="190" y="136" font-size="11">何もない → レベルを上げて大きく進む</text>
+        <text x="340" y="182" font-size="11">境界で止める</text>
+        <circle cx="476" cy="206" r="7" fill="none" stroke="#5a49c4" stroke-width="2"/>
+        <text x="488" y="226" font-size="11.5" fill="#5a49c4">L0 まで下げて交差確定</text>
+      </svg>

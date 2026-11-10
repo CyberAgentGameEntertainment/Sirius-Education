@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="210" viewBox="0 0 860 210"><style>text{font-family:"Yu Gothic UI","Hiragino Sans","Meiryo UI",sans-serif;letter-spacing:-0.02em;fill:#18202c}.mono{font-family:Consolas,"Cascadia Code",monospace}.muted{fill:#5a6577}</style><rect width="860" height="210" fill="#ffffff"/>
+      <line x1="20" y1="70" x2="840" y2="70" stroke="#d9dee6" stroke-width="2"/>
+      <g class="mono" font-size="11">
+        <g><circle cx="40" cy="70" r="5" fill="#5a6577"/><text x="40" y="52" text-anchor="middle" class="muted">BeforeRendering</text></g>
+        <g><circle cx="170" cy="70" r="5" fill="#5a6577"/><text x="170" y="52" text-anchor="middle" class="muted">Opaques</text></g>
+        <g><circle cx="300" cy="70" r="5" fill="#5a6577"/><text x="300" y="52" text-anchor="middle" class="muted">BeforeTransparents</text></g>
+        <g><circle cx="430" cy="70" r="5" fill="#5a6577"/><text x="430" y="52" text-anchor="middle" class="muted">Transparents</text></g>
+        <g><circle cx="560" cy="70" r="5" fill="#5a6577"/><text x="560" y="52" text-anchor="middle" class="muted">AfterTransparents</text></g>
+        <g><circle cx="690" cy="70" r="5" fill="#5a6577"/><text x="690" y="52" text-anchor="middle" class="muted">BeforePostProcess</text></g>
+        <g><circle cx="815" cy="70" r="5" fill="#5a6577"/><text x="815" y="52" text-anchor="middle" class="muted">AfterRendering</text></g>
+      </g>
+      <g font-size="12.5">
+        <rect x="8" y="88" width="132" height="44" rx="6" fill="#ddf2f2"/>
+        <text x="74" y="106" text-anchor="middle">SetupPass</text>
+        <text x="74" y="123" text-anchor="middle" font-size="10.5" class="muted">前フレームの反射RTを再バインド</text>
+        <rect x="108" y="146" width="124" height="44" rx="6" fill="#ddf2f2"/>
+        <text x="170" y="164" text-anchor="middle">SSPR 受け手</text>
+        <text x="170" y="181" text-anchor="middle" font-size="10.5" class="muted">反射RTを読んで描画</text>
+        <rect x="240" y="88" width="120" height="44" rx="6" fill="#e9e6fa"/>
+        <text x="300" y="106" text-anchor="middle">SSR</text>
+        <text x="300" y="123" text-anchor="middle" font-size="10.5" class="muted">Hi-Z トレース＋合成</text>
+        <rect x="496" y="88" width="128" height="44" rx="6" fill="#ddf2f2"/>
+        <text x="560" y="106" text-anchor="middle">SSPR 生成</text>
+        <text x="560" y="123" text-anchor="middle" font-size="10.5" class="muted">Compute で反射RTを作る</text>
+        <rect x="630" y="88" width="120" height="44" rx="6" fill="#fbefdc"/>
+        <text x="690" y="106" text-anchor="middle">God Ray</text>
+        <text x="690" y="123" text-anchor="middle" font-size="10.5" class="muted">既定タイミング</text>
+        <rect x="760" y="146" width="96" height="44" rx="6" fill="none" stroke="#b86a00" stroke-dasharray="4 3"/>
+        <text x="808" y="164" text-anchor="middle" font-size="11">God Ray</text>
+        <text x="808" y="181" text-anchor="middle" font-size="10" class="muted">選択時</text>
+      </g>
+      <path d="M560 134 C 560 200, 74 200, 74 136" fill="none" stroke="#0b7f86" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrS)"/>
+      <text x="330" y="205" text-anchor="middle" font-size="10.5" fill="#0b7f86">次のフレームで使う</text>
+      <defs><marker id="arrS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0b7f86"/></marker></defs>
+    </svg>

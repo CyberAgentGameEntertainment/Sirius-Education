@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-1895307241129195737
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 108400fc9f2f94a0fa05ee4fc1dc4356, type: 3}
+  m_Name: SSRVolume
+  m_EditorClassIdentifier: 
+  active: 1
+  enabled:
+    m_OverrideState: 1
+    m_Value: 1
+  minSmoothness:
+    m_OverrideState: 1
+    m_Value: 0.3
+  downSample:
+    m_OverrideState: 1
+    m_Value: 1
+  maxSteps:
+    m_OverrideState: 1
+    m_Value: 32
+  hiZTraceStartLevel:
+    m_OverrideState: 1
+    m_Value: 0
+  hiZTraceMaxLevel:
+    m_OverrideState: 1
+    m_Value: 7
+  reflectSky:
+    m_OverrideState: 1
+    m_Value: 0
+  ditherMode:
+    m_OverrideState: 1
+    m_Value: 0
+  ditherTarget:
+    m_OverrideState: 1
+    m_Value: 0
+  renderPassEvent:
+    m_OverrideState: 1
+    m_Value: 450
+  debugMode:
+    m_OverrideState: 1
+    m_Value: 0
+  debugDiffuseColor:
+    m_OverrideState: 1
+    m_Value: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  debugSmoothness:
+    m_OverrideState: 1
+    m_Value: 0.95
+  debugMetallic:
+    m_OverrideState: 1
+    m_Value: 0.5
+  debugAO:
+    m_OverrideState: 1
+    m_Value: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
+  m_Name: SSR_Volume_Profile
+  m_EditorClassIdentifier: 
+  components:
+  - {fileID: -1895307241129195737}
+  - {fileID: 5482110154515558755}
+--- !u!114 &5482110154515558755
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b2db86121404754db890f4c8dfe81b2, type: 3}
+  m_Name: Bloom
+  m_EditorClassIdentifier: 
+  active: 1
+  skipIterations:
+    m_OverrideState: 0
+    m_Value: 1
+  threshold:
+    m_OverrideState: 1
+    m_Value: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 1
+  scatter:
+    m_OverrideState: 0
+    m_Value: 0.7
+  clamp:
+    m_OverrideState: 0
+    m_Value: 65472
+  tint:
+    m_OverrideState: 0
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  highQualityFiltering:
+    m_OverrideState: 0
+    m_Value: 0
+  downscale:
+    m_OverrideState: 0
+    m_Value: 0
+  maxIterations:
+    m_OverrideState: 0
+    m_Value: 6
+  dirtTexture:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
+    dimension: 1
+  dirtIntensity:
+    m_OverrideState: 0
+    m_Value: 0

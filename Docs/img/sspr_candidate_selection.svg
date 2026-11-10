@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="350" viewBox="0 0 640 350"><style>text{font-family:"Yu Gothic UI","Hiragino Sans","Meiryo UI",sans-serif;letter-spacing:-0.02em;fill:#18202c}.mono{font-family:Consolas,"Cascadia Code",monospace}.muted{fill:#5a6577}</style><rect width="640" height="350" fill="#ffffff"/>
+            <defs><marker id="arrC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0b7f86"/></marker></defs>
+            <rect x="0" y="0" width="640" height="350" rx="6" fill="#f4f6f9" stroke="#d9dee6"/>
+            <rect x="330" y="145" width="30" height="55" fill="#5a6577" opacity=".45"/>
+            <rect x="452" y="60" width="18" height="140" fill="#5a6577" opacity=".45"/>
+            <text x="345" y="217" text-anchor="middle" font-size="11" class="muted">手前の箱</text>
+            <text x="461" y="217" text-anchor="middle" font-size="11" class="muted">奥の壁</text>
+            <line x1="20" y1="200" x2="620" y2="200" stroke="#0b7f86" stroke-width="2.5"/>
+            <text x="612" y="192" text-anchor="end" font-size="12" fill="#0b7f86">反射平面</text>
+            <rect x="22" y="80" width="30" height="20" rx="4" fill="#18202c"/>
+            <polygon points="52,84 62,80 62,100 52,96" fill="#18202c"/>
+            <text x="40" y="70" text-anchor="middle" font-size="12">カメラ</text>
+            <line x1="140" y1="72" x2="140" y2="150" stroke="#18202c" stroke-width="3"/>
+            <text x="140" y="164" text-anchor="middle" font-size="11" class="muted">画面</text>
+            <line x1="62" y1="90" x2="459" y2="79" stroke="#5a6577" stroke-width="1"/>
+            <line x1="62" y1="90" x2="345" y2="145" stroke="#5a6577" stroke-width="1"/>
+            <circle cx="140" cy="87.8" r="3.5" fill="#18202c"/>
+            <circle cx="140" cy="105.4" r="3.5" fill="#18202c"/>
+            <text x="134" y="84" text-anchor="end" font-size="11">B の画素（id.y 大）</text>
+            <text x="134" y="118" text-anchor="end" font-size="11">A の画素（id.y 小）</text>
+            <line x1="62" y1="90" x2="250" y2="200" stroke="#0b7f86" stroke-width="1.4"/>
+            <line x1="250" y1="200" x2="459" y2="321" stroke="#0b7f86" stroke-width="1.4" stroke-dasharray="5 4"/>
+            <line x1="345" y1="145" x2="345" y2="255" stroke="#5a6577" stroke-dasharray="2 4"/>
+            <line x1="459" y1="79" x2="459" y2="321" stroke="#5a6577" stroke-dasharray="2 4"/>
+            <circle cx="345" cy="145" r="6" fill="#18202c"/>
+            <circle cx="459" cy="79" r="6" fill="#18202c"/>
+            <text x="356" y="140" font-size="12">A</text>
+            <text x="470" y="76" font-size="12">B</text>
+            <circle cx="345" cy="255" r="6" fill="none" stroke="#18202c" stroke-width="1.6"/>
+            <circle cx="459" cy="321" r="6" fill="none" stroke="#18202c" stroke-width="1.6"/>
+            <text x="356" y="260" font-size="12">A′</text>
+            <text x="470" y="326" font-size="12">B′</text>
+            <line x1="250" y1="200" x2="342" y2="147" stroke="#0b7f86" stroke-width="2" marker-end="url(#arrC)"/>
+            <line x1="351" y1="142" x2="452" y2="83" stroke="#0b7f86" stroke-width="1.2" stroke-dasharray="2 4" opacity=".7"/>
+            <circle cx="250" cy="200" r="6" fill="#0b7f86"/>
+            <text x="250" y="226" text-anchor="middle" font-size="12" fill="#0b7f86">反射先 R</text>
+            <text x="402" y="104" font-size="11" fill="#0b7f86">A に遮られる</text>
+            <text x="500" y="250" font-size="11.5">A′ と B′ は同じ視線上</text>
+            <text x="500" y="267" font-size="11.5">→ どちらも R に投影される</text>
+            <text x="20" y="300" font-size="11.5">R で本当に見えるのは、R から反射したレイが先に当たる A。</text>
+            <text x="20" y="318" font-size="11.5">先に当たる点ほど反射平面に近く、画面でも下（id.y が小さい）に映る</text>
+            <text x="20" y="336" font-size="11.5" fill="#0b7f86">→ hash = id.y &lt;&lt; 16 | id.x の最小値を残せば A が選ばれる</text>
+          </svg>

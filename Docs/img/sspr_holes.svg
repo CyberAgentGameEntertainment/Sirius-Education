@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300"><style>text{font-family:"Yu Gothic UI","Hiragino Sans","Meiryo UI",sans-serif;letter-spacing:-0.02em;fill:#18202c}.mono{font-family:Consolas,"Cascadia Code",monospace}.muted{fill:#5a6577}</style><rect width="640" height="300" fill="#ffffff"/>
+            <rect x="0" y="0" width="640" height="300" rx="6" fill="#f4f6f9" stroke="#d9dee6"/>
+            <text x="20" y="30" font-size="12">元画素（Compute の 1 スレッド ＝ 1 画素）</text>
+            <g fill="#ffffff" stroke="#18202c" stroke-width="1">
+              <rect x="100" y="42" width="44" height="30"/><rect x="144" y="42" width="44" height="30"/><rect x="188" y="42" width="44" height="30"/><rect x="232" y="42" width="44" height="30"/><rect x="276" y="42" width="44" height="30"/>
+              <rect x="320" y="42" width="44" height="30"/><rect x="364" y="42" width="44" height="30"/><rect x="408" y="42" width="44" height="30"/><rect x="452" y="42" width="44" height="30"/><rect x="496" y="42" width="44" height="30"/>
+            </g>
+            <g font-size="11" text-anchor="middle" class="mono">
+              <text x="122" y="62">0</text><text x="166" y="62">1</text><text x="210" y="62">2</text><text x="254" y="62">3</text><text x="298" y="62">4</text>
+              <text x="342" y="62">5</text><text x="386" y="62">6</text><text x="430" y="62">7</text><text x="474" y="62">8</text><text x="518" y="62">9</text>
+            </g>
+            <g stroke="#0b7f86" stroke-width="1.4">
+              <line x1="122" y1="72" x2="112" y2="150"/><line x1="166" y1="72" x2="112" y2="150"/><line x1="210" y1="72" x2="144" y2="150"/><line x1="254" y1="72" x2="176" y2="150"/><line x1="298" y1="72" x2="208" y2="150"/>
+              <line x1="342" y1="72" x2="272" y2="150"/><line x1="386" y1="72" x2="336" y2="150"/><line x1="430" y1="72" x2="400" y2="150"/><line x1="474" y1="72" x2="464" y2="150"/><line x1="518" y1="72" x2="528" y2="150"/>
+            </g>
+            <text x="20" y="144" font-size="12">反射先（ColorRT）</text>
+            <g stroke="#18202c" stroke-width="1">
+              <rect x="96" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".55"/><rect x="128" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/><rect x="160" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/><rect x="192" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/>
+              <rect x="224" y="150" width="32" height="30" fill="#ffffff"/><rect x="256" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/><rect x="288" y="150" width="32" height="30" fill="#ffffff"/><rect x="320" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/>
+              <rect x="352" y="150" width="32" height="30" fill="#ffffff"/><rect x="384" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/><rect x="416" y="150" width="32" height="30" fill="#ffffff"/><rect x="448" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/>
+              <rect x="480" y="150" width="32" height="30" fill="#ffffff"/><rect x="512" y="150" width="32" height="30" fill="#0b7f86" fill-opacity=".3"/>
+            </g>
+            <g font-size="13" text-anchor="middle" fill="#5a6577">
+              <text x="240" y="170">✕</text><text x="304" y="170">✕</text><text x="368" y="170">✕</text><text x="432" y="170">✕</text><text x="496" y="170">✕</text>
+            </g>
+            <text x="112" y="200" text-anchor="middle" font-size="11" fill="#0b7f86">重なり</text>
+            <text x="112" y="215" text-anchor="middle" font-size="10.5" class="muted">→ 手順 5 で 1 つに</text>
+            <text x="400" y="200" text-anchor="middle" font-size="11">✕ = 誰も書かない画素（穴、alpha = 0 のまま）</text>
+            <text x="160" y="250" text-anchor="middle" font-size="11.5">像が縮む所：複数の元画素が</text>
+            <text x="160" y="266" text-anchor="middle" font-size="11.5">同じ反射先に集まる</text>
+            <text x="440" y="250" text-anchor="middle" font-size="11.5">像が引き伸ばされる所：書き込みの間隔が</text>
+            <text x="440" y="266" text-anchor="middle" font-size="11.5">1 画素より広がり、すき間が空く</text>
+          </svg>
